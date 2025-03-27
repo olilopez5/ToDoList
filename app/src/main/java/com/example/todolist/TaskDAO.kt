@@ -108,46 +108,42 @@ class TaskDAO(context: Context) {
         return task
     }
 
-    fun findAll(task: Task){
+    fun findAll(): List<Task> {
         val db = databaseManager.readableDatabase
 
         val projection = arrayOf(
             Task.COLUMN_NAME_ID,
             Task.COLUMN_NAME_TITLE,
-            Task.COLUMN_NAME_DONE)
+            Task.COLUMN_NAME_DONE
+        )
 
-        val selection = "${Task.COLUMN_NAME_ID} = $id"
-
-        var task: Task? = null
+        var taskList: MutableList<Task> = mutableListOf()
 
         try {
             val cursor = db.query(
                 Task.TABLE_NAME,   // The table to query
                 projection,             // The array of columns to return (pass null to get all)
-                selection,              // The columns for the WHERE clause
+                null,              // The columns for the WHERE clause
                 null,          // The values for the WHERE clause
                 null,                   // don't group the rows
                 null,                   // don't filter by row groups
                 null               // The sort order
             )
 
-            // moveToNext(Boolean) data true, no data false
-            //INDEX all columns
-
-            if (cursor.moveToNext()) {
+            while (cursor.moveToNext()) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_ID))
                 val title = cursor.getString(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_TITLE))
                 val done = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_DONE)) != 0
 
-                var task = Task(id, title, done)
-
+                val task = Task(id, title, done)
+                taskList.add(task)
             }
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
             db.close()
         }
-        return task
-    }
 
+        return taskList
+    }
 }
