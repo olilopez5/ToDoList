@@ -1,9 +1,9 @@
-package com.example.todolist
+package com.example.todolist.data
 
-class Task(
+data class Task(
     var id: Long,
     var title: String,
-    var done: Boolean
+    var done: Boolean = false
 
 
 ) {

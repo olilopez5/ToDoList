@@ -1,10 +1,9 @@
-package com.example.todolist
+package com.example.todolist.data
 
 import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
 import android.util.Log
-import android.widget.TableRow
+import com.example.todolist.utils.DatabaseManager
 
 class TaskDAO(context: Context) {
 

@@ -1,11 +1,14 @@
-package com.example.todolist
+package com.example.todolist.utils
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import com.example.todolist.data.Task
 
-class DatabaseManager (context: Context) : SQLiteOpenHelper(context,DATABASE_NAME, null, DATABASE_VERSION) {
+class DatabaseManager (context: Context) : SQLiteOpenHelper(context,
+    DATABASE_NAME, null, DATABASE_VERSION
+) {
     //busca db y si no existe lo crea OnCreate para inicializar
     // y si existe cambiar la version +1 (2) ejecuta onUpgrade
 
