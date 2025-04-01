@@ -6,10 +6,12 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.todolist.data.Task
 import com.example.todolist.databinding.ItemTaskBinding
+import com.example.todolist.utils.addStrikethrough
 
 class TaskAdapter(var items: List<Task>,
                   val onClick: (Int) -> Unit,
                   val onDelete: (Int) -> Unit,
+                  val onCheck: (Int) -> Unit
     ) : Adapter<TaskViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
@@ -25,6 +27,14 @@ class TaskAdapter(var items: List<Task>,
         holder.itemView.setOnClickListener {
             onClick(position)
         }
+        holder.binding.deleteButton.setOnClickListener {
+            onDelete(position)
+        }
+        holder.binding.doneCheckBox.setOnCheckedChangeListener { _, _ ->
+            if (holder.binding.doneCheckBox.isPressed) {
+                onCheck(position)
+            }
+        }
     }
 
     fun updateItems(items: List<Task>) {
@@ -36,7 +46,12 @@ class TaskAdapter(var items: List<Task>,
 class TaskViewHolder(val binding: ItemTaskBinding) : ViewHolder(binding.root) {
 
     fun render(task: Task) {
-        binding.titleTextView.text = task.title
         binding.doneCheckBox.isChecked = task.done
+
+        if (task.done) {
+            binding.titleTextView.text = task.title.addStrikethrough()
+        } else {
+            binding.titleTextView.text = task.title
+        }
     }
 }

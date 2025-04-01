@@ -3,6 +3,7 @@ package com.example.todolist.activities
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -37,20 +38,54 @@ class MainActivity : AppCompatActivity() {
         }
         taskDAO = TaskDAO(this)
 
-        taskList = taskDAO.findAll()
-
         adapter = TaskAdapter(emptyList(), { position ->
             val task = taskList[position]
 
             val intent = Intent(this, TaskActivity::class.java)
             intent.putExtra(TaskActivity.TASK_ID, task.id)
             startActivity(intent)
-        }, {
+        }, { position ->
+            val task = taskList[position]
 
-        })
+            AlertDialog.Builder(this)
+                .setTitle("Delete task")
+                .setMessage("Are you sure you want to delete this task?")
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    taskDAO.delete(task)
+                    refreshData()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .setCancelable(false)
+                .show()
+
+        }, { position ->
+            val task = taskList[position]
+
+            task.done = !task.done
+            taskDAO.update(task)
+            refreshData()
+            
+        },)
+
+
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
 
+        binding.addTaskButton.setOnClickListener {
+            val intent = Intent(this, TaskActivity::class.java)
+            startActivity(intent)
+        }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshData()
+    }
+
+    fun refreshData() {
+        taskList = taskDAO.findAll()
+        adapter.updateItems(taskList)
     }
 }
 

@@ -20,9 +20,7 @@ class TaskActivity : AppCompatActivity() {
 
     lateinit var taskDAO: TaskDAO
 
-    var task = Task
-
-
+    lateinit var task:  Task
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +28,7 @@ class TaskActivity : AppCompatActivity() {
 
         binding = ActivityTaskBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         //setContentView(R.layout.activity_task)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -41,18 +40,24 @@ class TaskActivity : AppCompatActivity() {
 
         taskDAO = TaskDAO(this)
 
-//        if (id!= 1L){
-//            task = TaskDAO.findById(id)!!
-//        }else{
-//            task = Task(-1L,"")
-//        }
+        if (id != -1L){
+            task = taskDAO.findById(id)!!
+            binding.titleEditText.setText(task.title)
+
+        }else{
+            task = Task(-1L,"")
+        }
 
         binding.saveButton.setOnClickListener {
             val title = binding.titleEditText.text.toString()
 
-            val task = Task(-1L, title)
+            task.title = title
 
-            taskDAO.insert(task)
+            if (task.id != -1L) {
+                taskDAO.update(task)
+            } else {
+                taskDAO.insert(task)
+            }
 
             finish()
         }

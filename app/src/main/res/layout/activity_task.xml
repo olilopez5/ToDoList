@@ -10,19 +10,19 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Titulo:"/>
+        android:text="Title:"/>
 
     <EditText
         android:id="@+id/titleEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="¿Que hay que hacer?"/>
+        android:hint="Write your task"/>
 
     <Button
         android:id="@+id/saveButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Guardar"
+        android:text="Save"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="32dp"/>
 
