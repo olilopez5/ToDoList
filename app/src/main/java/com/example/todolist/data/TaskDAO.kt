@@ -9,8 +9,6 @@ class TaskDAO(context: Context) {
 
     val databaseManager = DatabaseManager(context)
 
-    val catDAO = CatDAO
-
     fun insert(task: Task){
         //data in write mode
         val db = databaseManager.writableDatabase
@@ -18,7 +16,6 @@ class TaskDAO(context: Context) {
         val values = ContentValues().apply {
             put(Task.COLUMN_NAME_TITLE,task.title)
             put(Task.COLUMN_NAME_DONE,task.done)
-            put(Task.COLUMN_NAME_CATEGORY,task.category.id)
         }
         // new row, return PK od new row (insert ? error)
         try {
@@ -39,7 +36,6 @@ class TaskDAO(context: Context) {
         val values = ContentValues().apply {
             put(Task.COLUMN_NAME_TITLE,task.title)
             put(Task.COLUMN_NAME_DONE,task.done)
-            put(Task.COLUMN_NAME_CATEGORY,task.category.id)
         }
 
         try {
@@ -75,8 +71,7 @@ class TaskDAO(context: Context) {
         val projection = arrayOf(
             Task.COLUMN_NAME_ID,
             Task.COLUMN_NAME_TITLE,
-            Task.COLUMN_NAME_DONE,
-            Task.COLUMN_NAME_CATEGORY)
+            Task.COLUMN_NAME_DONE)
 
         val selection = "${Task.COLUMN_NAME_ID} = $id"
 
@@ -100,9 +95,8 @@ class TaskDAO(context: Context) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_ID))
                 val title = cursor.getString(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_TITLE))
                 val done = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_DONE)) != 0
-                val categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_CATEGORY))
 
-                var task = Task(id, title, done, ca)
+                task = Task(id, title, done)
 
             }
         } catch (e: Exception) {
