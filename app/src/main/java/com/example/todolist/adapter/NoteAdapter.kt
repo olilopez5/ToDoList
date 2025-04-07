@@ -6,7 +6,6 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.todolist.data.Note
 import com.example.todolist.databinding.ItemNoteBinding
-import com.example.todolist.utils.addStrikethrough
 
 class NoteAdapter(var items: List<Note>,
                   val onClick: (Int) -> Unit,
@@ -37,15 +36,18 @@ class NoteAdapter(var items: List<Note>,
     }
 }
 
+
 class NoteViewHolder(val binding: ItemNoteBinding) : ViewHolder(binding.root) {
 
     fun render(note: Note) {
-        binding.doneCheckBox.isChecked = note.done
 
-        if (note.done) {
-            binding.titleTextView.text = note.title.addStrikethrough()
+        if (note.private) {
+            binding.privateNoteSwitch.isChecked = true
+            binding.titleTextView.text = "Private Note"
         } else {
+            binding.privateNoteSwitch.isChecked = false
             binding.titleTextView.text = note.title
         }
     }
 }
+

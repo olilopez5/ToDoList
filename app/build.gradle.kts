@@ -41,6 +41,7 @@ android {
 
 dependencies {
 
+    implementation (libs.material.v180)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
