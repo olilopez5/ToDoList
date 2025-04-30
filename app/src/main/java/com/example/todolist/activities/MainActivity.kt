@@ -1,6 +1,5 @@
 package com.example.todolist.activities
 
-
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
@@ -9,9 +8,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.todolist.adapter.TaskAdapter
-import com.example.todolist.data.Task
-import com.example.todolist.data.TaskDAO
+import com.example.todolist.R
+import com.example.todolist.adapter.CategoryAdapter
+import com.example.todolist.data.Category
+import com.example.todolist.data.CategoryDAO
 import com.example.todolist.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -19,13 +19,12 @@ import java.util.Locale
 
 
 class MainActivity : AppCompatActivity() {
-    lateinit var binding : ActivityMainBinding
+    lateinit var binding: ActivityMainBinding
 
-    lateinit var taskDAO: TaskDAO
+    lateinit var categoryDAO: CategoryDAO
+    lateinit var categoryList: List<Category>
 
-    lateinit var taskList : List<Task>
-
-    lateinit var adapter: TaskAdapter
+    lateinit var adapter: CategoryAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,73 +32,69 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        setSupportActionBar(binding.toolbar)
-
-        binding.dateTextView.text = getTodayDate()
-        supportActionBar?.title = "Today´s reminders"
-
         //setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(com.example.todolist.R.id.main)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        taskDAO = TaskDAO(this)
 
-        adapter = TaskAdapter(
-            emptyList(),
-            { position ->
-                val task = taskList[position]
+        categoryDAO = CategoryDAO(this)
+        setSupportActionBar(binding.toolbar)
 
-                val intent = Intent(this, TaskActivity::class.java)
-                intent.putExtra(TaskActivity.TASK_ID, task.id)
-                startActivity(intent)
-            },
-            { position ->
-                val task = taskList[position]
+        binding.dateTextView.text = getTodayDate()
+        //supportActionBar?.title = " TO DO LIST "
+        supportActionBar?.title = "Categories"
 
-                AlertDialog.Builder(this)
-                    .setTitle("Delete task")
-                    .setMessage("Are you sure you want to delete this task?")
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                        taskDAO.delete(task)
-                        refreshData()
-                    }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .setCancelable(false)
-                    .show()
-
-            },
-            { position ->
-                val task = taskList[position]
-
-                task.done = !task.done
-                taskDAO.update(task)
-                refreshData()
-
-            },
-        )
-
-
+        adapter = CategoryAdapter(emptyList(), ::showCategory, ::editCategory, ::deleteCategory)
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
 
-        binding.addTaskButton.setOnClickListener {
-            val intent = Intent(this, TaskActivity::class.java)
+        binding.addCategoryButton.setOnClickListener {
+            val intent = Intent(this, CategoryActivity::class.java)
             startActivity(intent)
         }
-
     }
-
     override fun onResume() {
         super.onResume()
+
         refreshData()
     }
 
-    private fun refreshData() {
-        taskList = taskDAO.findAll()
-        adapter.updateItems(taskList)
+    fun refreshData() {
+        categoryList = categoryDAO.findAll()
+        adapter.updateItems(categoryList)
+    }
+
+    fun showCategory(position: Int) {
+        val category = categoryList[position]
+
+        val intent = Intent(this, TaskList::class.java)
+        intent.putExtra(TaskList.CATEGORY_ID, category.id)
+        startActivity(intent)
+    }
+
+    fun editCategory(position: Int) {
+        val category = categoryList[position]
+
+        val intent = Intent(this, CategoryActivity::class.java)
+        intent.putExtra(CategoryActivity.CATEGORY_ID, category.id)
+        startActivity(intent)
+    }
+
+    fun deleteCategory(position: Int) {
+        val category = categoryList[position]
+
+        AlertDialog.Builder(this)
+            .setTitle("Delete category")
+            .setMessage("Are you sure you want to delete this category?")
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                categoryDAO.delete(category)
+                refreshData()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .setCancelable(false)
+            .show()
     }
     private fun getTodayDate(): String {
         val calendar = Calendar.getInstance()

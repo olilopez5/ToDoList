@@ -9,69 +9,76 @@ class TaskDAO(context: Context) {
 
     val databaseManager = DatabaseManager(context)
 
-    fun insert(task: Task){
-        //data in write mode
+    val categoryDAO = CategoryDAO(context)
+
+    fun insert(task: Task) {
+        // Gets the data repository in write mode
         val db = databaseManager.writableDatabase
-        //new map of values column name is key
+
+        // Create a new map of values, where column names are the keys
         val values = ContentValues().apply {
-            put(Task.COLUMN_NAME_TITLE,task.title)
-            put(Task.COLUMN_NAME_DONE,task.done)
+            put(Task.COLUMN_NAME_TITLE, task.title)
+            put(Task.COLUMN_NAME_DONE, task.done)
+            put(Task.COLUMN_NAME_CATEGORY, task.category.id)
         }
-        // new row, return PK od new row (insert ? error)
-        try {
-            val newRowId = db.insert(Task.TABLE_NAME, null,values)
 
-            Log.i("DATABASE", "Insert : $newRowId")
+        try {
+            // Insert the new row, returning the primary key value of the new row
+            val newRowId = db.insert(Task.TABLE_NAME, null, values)
+
+            Log.i("DATABASE", "Inserted task with id: $newRowId")
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
             db.close()
         }
-
     }
-    fun update(task: Task){
 
+    fun update(task: Task) {
+        // Gets the data repository in write mode
         val db = databaseManager.writableDatabase
 
+        // Create a new map of values, where column names are the keys
         val values = ContentValues().apply {
-            put(Task.COLUMN_NAME_TITLE,task.title)
-            put(Task.COLUMN_NAME_DONE,task.done)
+            put(Task.COLUMN_NAME_TITLE, task.title)
+            put(Task.COLUMN_NAME_DONE, task.done)
+            put(Task.COLUMN_NAME_CATEGORY, task.category.id)
         }
 
         try {
-            //  whereClause = ? , whereArgs arrayOf("${task.id}")
-            val newRowId = db.update(Task.TABLE_NAME, values, "${Task.COLUMN_NAME_ID} = ${task.id} ", null)
+            val updatedRows = db.update(Task.TABLE_NAME, values, "${Task.COLUMN_NAME_ID} = ${task.id}", null)
 
-            Log.i("DATABASE", "Update task: ${task.id}")
+            Log.i("DATABASE", "Updated task with id: ${task.id}")
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
             db.close()
         }
-
     }
-    fun delete(task: Task){
 
+    fun delete(task: Task) {
         val db = databaseManager.writableDatabase
 
-        //
         try {
-            val deleteRows = db.delete(Task.TABLE_NAME,"${Task.COLUMN_NAME_ID} = ${task.id}", null)
+            val deletedRows = db.delete(Task.TABLE_NAME, "${Task.COLUMN_NAME_ID} = ${task.id}", null)
 
-            Log.i("DATABASE", "Delete task: ${task.id}")
+            Log.i("DATABASE", "Deleted task with id: ${task.id}")
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
             db.close()
         }
     }
-    fun findById(id: Long): Task?{
+
+    fun findById(id: Long): Task? {
         val db = databaseManager.readableDatabase
 
         val projection = arrayOf(
             Task.COLUMN_NAME_ID,
             Task.COLUMN_NAME_TITLE,
-            Task.COLUMN_NAME_DONE)
+            Task.COLUMN_NAME_DONE,
+            Task.COLUMN_NAME_CATEGORY
+        )
 
         val selection = "${Task.COLUMN_NAME_ID} = $id"
 
@@ -88,22 +95,20 @@ class TaskDAO(context: Context) {
                 null               // The sort order
             )
 
-            // moveToNext(Boolean) data true, no data false
-            //INDEX all columns
-
             if (cursor.moveToNext()) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_ID))
                 val title = cursor.getString(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_TITLE))
                 val done = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_DONE)) != 0
-
-                task = Task(id, title, done)
-
+                val categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_CATEGORY))
+                val category = categoryDAO.findById(categoryId)!!
+                task = Task(id, title, done, category)
             }
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
             db.close()
         }
+
         return task
     }
 
@@ -113,7 +118,8 @@ class TaskDAO(context: Context) {
         val projection = arrayOf(
             Task.COLUMN_NAME_ID,
             Task.COLUMN_NAME_TITLE,
-            Task.COLUMN_NAME_DONE
+            Task.COLUMN_NAME_DONE,
+            Task.COLUMN_NAME_CATEGORY
         )
 
         var taskList: MutableList<Task> = mutableListOf()
@@ -126,15 +132,61 @@ class TaskDAO(context: Context) {
                 null,          // The values for the WHERE clause
                 null,                   // don't group the rows
                 null,                   // don't filter by row groups
-                Task.COLUMN_NAME_DONE             // The sort order
+                Task.COLUMN_NAME_DONE               // The sort order
             )
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_ID))
                 val title = cursor.getString(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_TITLE))
                 val done = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_DONE)) != 0
+                val categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_CATEGORY))
+                val category = categoryDAO.findById(categoryId)!!
+                val task = Task(id, title, done, category)
 
-                val task = Task(id, title, done)
+                taskList.add(task)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            db.close()
+        }
+
+        return taskList
+    }
+
+    fun findAllByCategory(category: Category): List<Task> {
+        val db = databaseManager.readableDatabase
+
+        val projection = arrayOf(
+            Task.COLUMN_NAME_ID,
+            Task.COLUMN_NAME_TITLE,
+            Task.COLUMN_NAME_DONE,
+            Task.COLUMN_NAME_CATEGORY
+        )
+
+        val selection = "${Task.COLUMN_NAME_CATEGORY} = ${category.id}"
+
+        var taskList: MutableList<Task> = mutableListOf()
+
+        try {
+            val cursor = db.query(
+                Task.TABLE_NAME,   // The table to query
+                projection,             // The array of columns to return (pass null to get all)
+                selection,              // The columns for the WHERE clause
+                null,          // The values for the WHERE clause
+                null,                   // don't group the rows
+                null,                   // don't filter by row groups
+                Task.COLUMN_NAME_DONE               // The sort order
+            )
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_ID))
+                val title = cursor.getString(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_TITLE))
+                val done = cursor.getInt(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_DONE)) != 0
+                val categoryId = cursor.getLong(cursor.getColumnIndexOrThrow(Task.COLUMN_NAME_CATEGORY))
+                val category = categoryDAO.findById(categoryId)!!
+                val task = Task(id, title, done, category)
+
                 taskList.add(task)
             }
         } catch (e: Exception) {
